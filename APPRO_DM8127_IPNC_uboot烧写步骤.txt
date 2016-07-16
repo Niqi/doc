@@ -1,0 +1,65 @@
+APPRO_DM8127_IPNC_uboot烧写步骤
+
+
+预设条件：把APPRO DM8127 IPNC启动方式设置为串口启动，
+
+情形A：NANDFLASH上无任何内容，或者其他情况导致串口输出CCCCCCC....
+
+
+一、导入第一阶段的UBOOT（此过程并未烧写，类似UBL）
+1、当串口打印CCCCCCCCCCCC字符时，在TeraTerm中依次选择 Transfer --> XMODEM --> Send，打开u-boot.min.uart，进行发送；
+
+2、下载完成后，DM8127的内部ROM中的CODE会启动它（检测DDR行不行），TeraTerm终端会进入TI-MIN#
+
+
+
+二、导入第二阶段的UBOOT（此过程并未烧写，仅仅在DDR中运行）
+1、在 TI_MIN# 中输入： loadb 0x81000000
+
+2、在TeraTerm中依次选择 Transfer --> Kermit --> Send，打开u-boot.bin，进行发送；
+
+3、下载完成后，输入：go 0x81000000
+
+4、TeraTerm终端会进入 TI8148_IPNC# ,至此，第二阶段UBOOT启动完成；
+
+
+
+三、烧写第一阶段UBOOT
+1、在 TI8148_IPNC#下依次执行以下命令，准备导入文件，
+mw.b 0x81000000 0xFF 0x20000
+loadb 0x81000000
+
+2、在TeraTerm中依次选择 Transfer --> Kermit --> Send，打开u-boot.min.bin，进行发送；
+
+3、下载完成后，依次输入以下命令，进行烧写，
+nand erase 0x0 0x20000
+nand write.i 0x81000000 0x0 0x20000
+
+4、如果没有出现错误消息，则说明烧写成功；
+
+
+
+四、烧写第二阶段UBOOT
+1、在 TI8148_IPNC#下依次执行以下命令，准备导入文件，
+mw.b 0x81000000 0xFF 0x60000
+loadb 0x81000000
+
+2、在TeraTerm中依次选择 Transfer --> Kermit --> Send，打开u-boot.bin，进行发送；
+
+3、下载完成后，依次输入以下命令，进行烧写，
+nand erase 0x20000 0x60000
+nand write.i 0x81000000 0x20000 0x60000
+
+4、如果没有出现错误消息，则说明烧写成功；
+
+
+
+
+
+
+情形B：NANDFLASH已经存在老版本的UBOOT，升级UBOOT
+
+
+很容易理解，只需要按照情形A中的第三、第四部，依次操作即可；
+
+
